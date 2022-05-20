@@ -17,6 +17,8 @@ import ru.vsu.cs.course1.graph.GraphAlgorithms;
 import ru.vsu.cs.course1.graph.GraphUtils;
 import ru.vsu.cs.util.SwingUtils;
 
+import java.util.*;
+
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
@@ -28,6 +30,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Scanner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -207,7 +210,7 @@ public class GraphDemoFrame extends JFrame {
                 panelGraphPainter.paint(dotToSvg(GraphUtils.toDot(graph)));
 
 
-                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph);
+                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph, 0, 5);
                 String s = "";
 
                 for (List<Integer> list1 : list) {
