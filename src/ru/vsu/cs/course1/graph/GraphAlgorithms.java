@@ -29,24 +29,31 @@ public class GraphAlgorithms {
         new Inner().visit(from);
     }
 
-    public static void dfs(Graph graph, List<List<Integer>> result, List<Integer> path, int start,int finish){
+    public static void dfs(Graph graph, List<List<Integer>> result, List<Integer> path, int start,int finish,boolean[] visited){
 
         path.add(start);
 
-        if (start== finish)
+        if (start== finish ) {
             result.add(new ArrayList(path));
-        else
-            for (int v: graph.adjacencies(start))
-                dfs(graph, result, path, v,finish);
-        path.remove(path.size()-1);
+        }
+        else {
+            visited[start]=true;
+            for (int v : graph.adjacencies(start)) {
+                if (!visited[v]){
+                    dfs(graph, result, path, v, finish, visited);
+            }
+            }
+            path.remove(path.size() - 1);
+            visited[path.size() - 1]=false;
 
-
+        }
     }
 
     public static List<List<Integer>> allPathSourceTarget(Graph graph,int start,int finish){
+        boolean[] visited = new boolean[graph.vertexCount()];
         List<List<Integer>> result = new ArrayList<>();
         List<Integer> path = new ArrayList<>();
-        dfs(graph,result,path,start,finish);
+        dfs(graph,result,path,start,finish, visited);
         return result;
     }
 
