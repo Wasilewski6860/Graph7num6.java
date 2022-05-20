@@ -210,7 +210,7 @@ public class GraphDemoFrame extends JFrame {
                 panelGraphPainter.paint(dotToSvg(GraphUtils.toDot(graph)));
 
 
-                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph, 0, 5);
+                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph, 0, 3);
                 String s = "";
 
                 for (List<Integer> list1 : list) {
