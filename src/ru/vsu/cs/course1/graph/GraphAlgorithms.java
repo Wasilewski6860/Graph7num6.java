@@ -33,17 +33,20 @@ public class GraphAlgorithms {
 
         path.add(start);
 
-        if (start== finish)
+        if (start== finish) {
             result.add(new ArrayList(path));
-        else
-            for (int v: graph.adjacencies(start))
-                dfs(graph, result, path, v,finish);
-        path.remove(path.size()-1);
+        }
+        else {
+            for (int v : graph.adjacencies(start)) {
+                dfs(graph, result, path, v, finish);
+            }
+            path.remove(path.size() - 1);
 
-
+        }
     }
 
     public static List<List<Integer>> allPathSourceTarget(Graph graph,int start,int finish){
+        boolean[] visited = new boolean[graph.vertexCount()];
         List<List<Integer>> result = new ArrayList<>();
         List<Integer> path = new ArrayList<>();
         dfs(graph,result,path,start,finish);
