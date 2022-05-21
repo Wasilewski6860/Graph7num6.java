@@ -40,7 +40,9 @@ public class GraphAlgorithms {
             visited[start]=true;
             for (int v : graph.adjacencies(start)) {
                 if (!visited[v]){
+                    visited[v]=true;
                     dfs(graph, result, path, v, finish, visited);
+                    //         visited[v]=false;
             }
             }
             path.remove(path.size() - 1);
