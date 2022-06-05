@@ -8,9 +8,14 @@ import java.util.Iterator;
  */
 public class AdjMatrixGraph implements Graph {
 
-    private boolean[][] adjMatrix = null;
+    public boolean[][] adjMatrix = null;
     private int vCount = 0;
     private int eCount = 0;
+
+    public boolean[][] getAdjMatrix(){
+        return adjMatrix;
+    }
+
 
     /**
      * Конструктор

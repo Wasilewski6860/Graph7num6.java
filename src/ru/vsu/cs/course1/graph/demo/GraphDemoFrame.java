@@ -206,24 +206,34 @@ public class GraphDemoFrame extends JFrame {
                 matcher.find();
                 String className = matcher.group(1);
                 Class clz = Class.forName("ru.vsu.cs.course1.graph." + className);
+
+
                 Graph graph = GraphUtils.fromStr(textAreaGraphFile.getText(), clz);
+
                 GraphDemoFrame.this.graph = graph;
                 panelGraphPainter.paint(dotToSvg(GraphUtils.toDot(graph)));
 
 
-                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph, (int) spinnerFromVertex.getValue(), (int) spinnerToVertex.getValue());
+                Set<Integer> set = GraphAlgorithms.commonVertices(GraphAlgorithms.allPathSourceTarget(graph, (int) spinnerFromVertex.getValue(), (int) spinnerToVertex.getValue()));
+
                 String s = "";
-                System.out.println(spinnerFromVertex.getComponentCount());
-                System.out.println(spinnerToVertex.getComponentCount());
 
-                for (List<Integer> list1 : list) {
-                    String temp = "";
-                    for (int i : list1) {
-                        temp = temp + " " + i;
-                    }
-                    s = s + "  " + temp;
+                for (int i : set) {
+                    s = s + " " + i;
                 }
+//                List<List<Integer>> list = GraphAlgorithms.allPathSourceTarget(graph, (int) spinnerFromVertex.getValue(), (int) spinnerToVertex.getValue());
 
+//                System.out.println(spinnerFromVertex.getComponentCount());
+//                System.out.println(spinnerToVertex.getComponentCount());
+//
+//                for (List<Integer> list1 : list) {
+//                    String temp = "";
+//                    for (int i : list1) {
+//                        temp = temp + " " + i;
+//                    }
+//                    s = s + "  " + temp;
+//                }
+//
                 textAreaSystemOut.setText(s);
 
 
@@ -306,22 +316,26 @@ public class GraphDemoFrame extends JFrame {
             }
         });
         buttonDfsQueue.addActionListener(e -> {
-            try {
-                if (graph == null) {
-                    return;
-                }
-                showSystemOut(() -> {
-                    int from = (int) spinnerFromVertex.getValue();
-                    final boolean[] first = {true};
-                    GraphAlgorithms.bfs(graph, from, v -> {
-                        System.out.print(first[0] ? "" : ", ");
-                        first[0] = false;
-                        System.out.print(v);
-                    });
-                });
-            } catch (Exception exc) {
-                SwingUtils.showErrorMessageBox(exc);
-            }
+
+
+
+
+//            try {
+//                if (graph == null) {
+//                    return;
+//                }
+//                showSystemOut(() -> {
+//                    int from = (int) spinnerFromVertex.getValue();
+//                    final boolean[] first = {true};
+//                    GraphAlgorithms.bfs(graph, from, v -> {
+//                        System.out.print(first[0] ? "" : ", ");
+//                        first[0] = false;
+//                        System.out.print(v);
+//                    });
+//                });
+//            } catch (Exception exc) {
+//                SwingUtils.showErrorMessageBox(exc);
+//            }
         });
         buttonSaveGraphSvgToFile.addActionListener(e -> {
             if (panelGraphPainter.svg == null) {

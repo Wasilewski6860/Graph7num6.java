@@ -6,6 +6,7 @@ package ru.vsu.cs.course1.graph;
  */
 public interface WeightedGraph extends Graph {
 
+
     /**
      * Интерфейс, описывающий связанную вершину с весом связи
      * (используется для перебора связанных вершин у конкретной вершины)

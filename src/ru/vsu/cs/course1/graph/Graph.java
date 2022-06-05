@@ -5,6 +5,8 @@ package ru.vsu.cs.course1.graph;
  * с реализацией некоторых методов графа
  */
 public interface Graph {
+
+    public  boolean[][] adjMatrix = null;
     /**
      * Кол-во вершин в графе
      * @return
