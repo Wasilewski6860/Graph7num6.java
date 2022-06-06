@@ -119,14 +119,152 @@ public class GraphAlgorithms {
         return newVisited ;
     }
 
+    /**
+     Поиск самого вложенного параллельного соединения
+     */
+    public static void searchingForTheMostNestedParallelConnection(boolean[][] adjMatrix,int curr,int k,boolean[] visited){
+
+        int count =0;
+        for (int i=0;i<adjMatrix[curr].length;i++){
+            if(adjMatrix[curr][i] && !visited[i]) count++;
+        }
+
+        for (int i=0;i<adjMatrix[curr].length;i++){
+            if(adjMatrix[curr][i] && !visited[i] ) {
+                if (count>1) k=curr;
+                visited[curr]=true;
+                searchingForTheMostNestedParallelConnection(adjMatrix, i, k, visited);
+            }
+        }
+
+    }
+
+    public static void simplifyParallel(boolean[][] adjMatrix,double[][] resistors,int curr){
+        int Final=0;
+        int chislitel=1;
+        int znamenatel =1;
+        double tempR=0;
+
+        boolean didiWeFoundAnEnd = false;
+        for (int i=0;i< adjMatrix[curr].length;i++){
+            if (!didiWeFoundAnEnd) Final=searchForEndOfSerial(adjMatrix,i);
+            if (adjMatrix[curr][i]){
+              tempR=  simplifySerial(adjMatrix,resistors,i,0);
+            }
+            chislitel*=tempR;
+            znamenatel+=tempR;
+            adjMatrix[curr][i]=false;
+        }
+        resistors[curr][Final]=chislitel/znamenatel;
+        adjMatrix[curr][Final]=true;
+    }
+
+
+    public static boolean checkForSimplicity(boolean[][] adjMatrix){
+        
+        for (int i=0;i<adjMatrix.length;i++){
+            int count=0;
+            for (int j=0;j< adjMatrix[i].length;j++){
+                if (adjMatrix[i][j]) count++;
+            }
+            if (count>1) return false;
+        }
+        return true;
+    }
+    
+    
+    public static double itsFinalBitch(boolean[][] adjMatrix,double[][] resistors,int curr){
+        
+        while (!checkForSimplicity(adjMatrix)){
+            int k=0;
+            boolean[] visited = new boolean[adjMatrix.length];
+            for (int i=0;i< visited.length;i++){
+                visited[i]=false;
+            }
+            System.out.println(k);
+            searchingForTheMostNestedParallelConnection(adjMatrix,curr,0,visited);
+            simplifyParallel(adjMatrix,resistors,curr);
+        }
+        return simplifySerial(adjMatrix,resistors,curr,0);
+    }
+    
+
+    public static double simplifySerial(boolean[][] adjMatrix,double[][] resistors,int curr,double R){
+
+        int start=curr;int finish=curr;
+       while (checkForEndOfSerial(adjMatrix, curr)){
+
+           int whereWeWantToMove =0;
+           for (int i=0;i<adjMatrix[curr].length;i++){
+               if (adjMatrix[curr][i]){
+                   whereWeWantToMove=i;
+                   break;
+               }
+           }
+           R+=resistors[curr][whereWeWantToMove];
+           adjMatrix[curr][whereWeWantToMove]=false;
+           curr=whereWeWantToMove;
+           finish=whereWeWantToMove;
+
+       }
+
+       adjMatrix[start][finish]=true;
+       resistors[start][finish]=R;
+       return R;
+
+    }
+
+
+    public static int searchForEndOfSerial(boolean[][] adjMatrix,int curr){
+        int next=curr;
+        int countOfInput =0;
+
+        for (int i=0;i<adjMatrix[curr].length;i++){
+            if (adjMatrix[curr][i]){
+                next=i;
+                break;
+            }
+        }
+
+        for (int i=0;i<adjMatrix[next].length;i++){
+
+            if (adjMatrix[i][next]) {
+                System.out.println("  "+i+" "+next+"  ");
+                countOfInput++;
+            }
+        }
+        if (countOfInput>1){
+            return next;
+        } else if(countOfInput==1) return searchForEndOfSerial(adjMatrix,next); else return curr;
+    }
+
+    public static boolean checkForEndOfSerial(boolean[][] adjMatrix,int curr){
+//        int next=0;
+        int countOfInput =0;
+//
+//        for (int i=0;i<adjMatrix[curr].length;i++){
+//            if (adjMatrix[curr][i]){
+//                next=i;
+//                break;
+//            }
+//        }
+
+        for (int i=0;i<adjMatrix[curr].length;i++){
+            if (adjMatrix[i][curr]) countOfInput++;
+        }
+        if (countOfInput>1){
+            return true;
+        }
+        return false;
+    }
 
 
         //Метод по расчету сопротивления цепи
-    public static double resistance(boolean[][] adjMatrix,int[][] resistors,int curr,double R,boolean[] visited){
+    public static double resistance(boolean[][] adjMatrix, double[][] resistors, int curr, double R, boolean[] visited){
 
         //Первое -- выясняем, последовательное ли соединение, или параллельное
         // Для этого заводим счетчик смежных вершин
-        // Если есть путь между вершинами curr  и i,
+        // Если есть путь между вершинами curr и i,
         // а так же мы еще не ходили в i(по идее, для орграфа мы не можем вернуться назад, но на всякий случай добавил и эту проверку)
         // то счетчик наращивается
         int count =0;
@@ -143,6 +281,7 @@ public class GraphAlgorithms {
             //Проходимся по всем вершинам, смежным с текущей
             for (int i=0;i< adjMatrix[curr].length;i++){
             //Если путь есть, и мы еще не посещали вершину i, то
+
                 if (adjMatrix[curr][i] && !visited[i]){
                     //Посещаем ее
                     visited[curr]=true;
@@ -177,6 +316,7 @@ public class GraphAlgorithms {
         return R;
     }
 
+
     //Проверяем на работоспособность
     public static void testOfNormalWork(){
 
@@ -209,21 +349,57 @@ public class GraphAlgorithms {
                 {false,false,false,false,false,false,true},
                 {false,false,false,false,false,true,false},
                 {false,false,false,false,false,true,false},
-                {false,false,false,false,true,false,true},
+                {false,false,false,false,false,false,false},
                 {false,false,false,false,false,true,false}
         };
-        int[][] resistors = {
-                {0,5,9,6,0,0,0},
+        double[][] resistors = {
+                {0,5,6,9,0,0,0},
                 {0,0,0,0,6,0,0},
                 {0,0,0,0,0,0,6},
                 {0,0,0,0,0,21,0},
                 {0,0,0,0,0,8,0},
-                {0,0,0,0,8,0,1},
+                {0,0,0,0,0,0,0},
                 {0,0,0,0,0,1,0}
         };
 
         boolean[] visited = {false,false,false,false,false,false,false};
-        System.out.println(GraphAlgorithms.resistance(newGraph,resistors,0,0,visited));
+
+
+//        boolean[][] bbrbrbrb =  {
+//            {false,true,false,false,false,false,false,false,false,false,false,false},
+//            {false,false,true,false,false,false,false,false,false,false,false,false},
+//            {false,false,false,true,true,true,false,false,false,false,false,false},
+//            {false,false,false,false,false,false,false,true,false,false,false,false},
+//            {false,false,false,false,false,false,false,false,false,false,false,true},
+//            {false,false,false,false,false,false,true,false,false,false,false,false},
+//            {false,false,false,false,false,false,false,true,false,false,false,false},
+//            {false,false,false,false,false,false,false,false,false,false,false,true},
+//            {false,false,false,false,false,false,false,false,false,false,false,false},
+//            {false,false,false,false,false,false,false,false,false,false,false,false},
+//            {false,false,false,false,false,false,false,false,false,false,false,false},
+//            {false,false,false,false,false,false,false,false,false,false,false,false}
+//        };
+//
+//        boolean[][] newGraph = {
+//                {false,true,false,false,false},
+//                {false,false, true,false,false},
+//                {false,false, false,true,true},
+//                {false,false, false,false,false},
+//                {false,false, false,false,false}
+//
+//        };
+//        double[][] resistors={
+//                {0,5,0,0,0},
+//                {0,0,6,0,0},
+//                {0,0,0,4,5},
+//                {0,0,0,0,0},
+//                {0,0,0,0,0}
+//        };
+      //          boolean[] visited ={false,false,false,false,false};
+
+  //      System.out.println(GraphAlgorithms.resistance(newGraph,resistors,0,0,visited));
+        System.out.println();
+        System.out.println(itsFinalBitch(newGraph,resistors,0));
     }
 
     public static List<List<Integer>> allPathSourceTarget(Graph graph,int start,int finish){
