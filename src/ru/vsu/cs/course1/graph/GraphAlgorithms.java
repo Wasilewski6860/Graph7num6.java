@@ -121,104 +121,159 @@ public class GraphAlgorithms {
 
     /**
      Поиск самого вложенного параллельного соединения
+     Наша задача - найти простое параллельное соединение, т.е. не содержащее в себе прочих параллельных соединений
+     Получаем на вход матрицу смежности/инцидентности, текущую вершину, откуда начинаем двигаться,
+     текущий узел, после которого начинается простое параллельное соединение, и массив посещенных вершин
      */
     public static void searchingForTheMostNestedParallelConnection(boolean[][] adjMatrix,int curr,int k,boolean[] visited){
-
+        //Заводим счетчик под число вершин, смежных с текущей
         int count =0;
         for (int i=0;i<adjMatrix[curr].length;i++){
+            //Если вершина смежна и не была посещена, наращиваем счетчик
             if(adjMatrix[curr][i] && !visited[i]) count++;
         }
-
+        //Повторно проходимся по всем смежным с текущей вершиной
         for (int i=0;i<adjMatrix[curr].length;i++){
+            //Если путь есть, и вершина не посещена
             if(adjMatrix[curr][i] && !visited[i] ) {
+                //Если текущая вершина является началом параллельного соединения, запоминаем его индекс в k
                 if (count>1) k=curr;
+                //Посещаем вершину
                 visited[curr]=true;
+                //И рекурсивно вызываем функцию из k
                 searchingForTheMostNestedParallelConnection(adjMatrix, i, k, visited);
             }
         }
 
     }
 
+    /**
+     * Упрощение параллельного соединения
+     * @param adjMatrix - матрица смежности
+     * @param resistors - сопротивления резисторов
+     * @param curr - текущая вершина, начало параллельного соединения
+     */
     public static void simplifyParallel(boolean[][] adjMatrix,double[][] resistors,int curr){
+
         int Final=0;
         int chislitel=1;
         int znamenatel =1;
         double tempR=0;
 
+        //Будем искать вершину, которая будет концом параллельного соединения,т.е. в которую будут сходиться прочие ребра параллельного соединения
         boolean didiWeFoundAnEnd = false;
         for (int i=0;i< adjMatrix[curr].length;i++){
+            //Ищем конец пар-го соединения
             if (!didiWeFoundAnEnd) Final=searchForEndOfSerial(adjMatrix,i);
+            //Для каждой смежной вершины упрощаем цепочку последовательных соединений, начало коей лежит в i, в один резистор
             if (adjMatrix[curr][i]){
               tempR=  simplifySerial(adjMatrix,resistors,i,0);
             }
+            //Высчитываем собственно сопртивление паралельного участка
             chislitel*=tempR;
             znamenatel+=tempR;
+            //Превращаем разветвление, начало которого лежит в [curr], в одиночный резистор, т.е. все боковые ответвления, которые мы только что учли, обрезаем
+            //Тогда дальнейший поиск параллельных соединений не сочтет это соединение параллельным, но и не пропустит все вершины, лежащие после этого параллельного соединения
+            //(Об этом чуть ниже)
             adjMatrix[curr][i]=false;
+
         }
+        //Когда сопротивление посчитано(почти), записываем его в значение нового резистора
+        //Для этого мы "стягиваем" текущую вершину, являющуюся началом разветвления, и конец разветвления
         resistors[curr][Final]=chislitel/znamenatel;
+        //А так же заносим в матрицу смежности, что между этими вершинами есть ребро
         adjMatrix[curr][Final]=true;
     }
 
-
+    /**Проверка на то, является ли граф просто цепочкой последовательных резисторов(когда остается лишь сложить все сопртивления)
+     *
+     * @param adjMatrix - матрица смежности графа
+     * @return
+     */
     public static boolean checkForSimplicity(boolean[][] adjMatrix){
-        
+        //Проходимся двойным циклом по всему графу
         for (int i=0;i<adjMatrix.length;i++){
+            //Заводим счетчик смежных с вершиной i вершин
             int count=0;
             for (int j=0;j< adjMatrix[i].length;j++){
+                //Если между i-й и j-й вершинами есть путь, наращиваем счетчик
                 if (adjMatrix[i][j]) count++;
             }
+            //Если значение счетчика больше одного, т.е. есть разветвления, граф не является окончательно упрощенным,
+            //И другие методы должны будут упрощать его в дальнейшем
             if (count>1) return false;
         }
         return true;
     }
-    
-    
-    public static double itsFinalBitch(boolean[][] adjMatrix,double[][] resistors,int curr){
-        
-        while (!checkForSimplicity(adjMatrix)){
-            int k=0;
-            boolean[] visited = new boolean[adjMatrix.length];
-            for (int i=0;i< visited.length;i++){
-                visited[i]=false;
-            }
-            System.out.println(k);
-            searchingForTheMostNestedParallelConnection(adjMatrix,curr,0,visited);
-            simplifyParallel(adjMatrix,resistors,curr);
-        }
-        return simplifySerial(adjMatrix,resistors,curr,0);
-    }
-    
 
+    /**
+     * Конечный метод, возвращающий сопротивление цепи, начиная с узла curr
+     * @param adjMatrix - матрица смежности
+     * @param resistors - резисторы
+     * @param curr - начальный узел
+     * @return
+     */
+
+    /**
+     * Упрощение последовательного соединения
+     * @param adjMatrix - матрица смежности
+     * @param resistors - значения резисторов
+     * @param curr - текущая вершина
+     * @param R - сопротивление
+     * @return
+     *
+     * Проблемный метод, хотя по логике не сложный
+     *
+     */
     public static double simplifySerial(boolean[][] adjMatrix,double[][] resistors,int curr,double R){
 
-        int start=curr;int finish=curr;
-       while (checkForEndOfSerial(adjMatrix, curr)){
+        //Начало, откуда будем двигаться дальше, это же номер вершины-начала нового резистора, который будет суммой всех последующих
+        int start=curr;
+        //Конечный индекс, который будем соединять с начальным, образуя тем самым новый резистор
+        int finish=curr;
 
+        //Пока текущая вершина не является окончанием последовательного участка цепи, т.е. если из нее исходит более одного ребра(начало параллельного соединения)
+        //или если в нее направлено более одного ребра(точка окончания параллельного соединения)
+       while (checkForEndOfSerial(adjMatrix, curr)){
+            //Индекс вершины, куда мы хотим попасть, т.е. следующей вершины в последовательном соединении
            int whereWeWantToMove =0;
+           //Ищем его
            for (int i=0;i<adjMatrix[curr].length;i++){
                if (adjMatrix[curr][i]){
                    whereWeWantToMove=i;
                    break;
                }
            }
+           //Прибавляем к значению сопротивления значение между текущей вершиной и вершиной, куда мы хотим попасть
            R+=resistors[curr][whereWeWantToMove];
+           //Удаляем старый резистор
            adjMatrix[curr][whereWeWantToMove]=false;
+           //И двигаемся дальше
            curr=whereWeWantToMove;
            finish=whereWeWantToMove;
 
        }
-
+        //Стягиваем стартовую и конечную вершины, таким образом создавая новый резистор
        adjMatrix[start][finish]=true;
        resistors[start][finish]=R;
+       //ТАким образом заменяем несколько последовательных ребер на одно ребро
        return R;
 
     }
 
-
+    /**
+     * Поиск индекса, на котором окончится последовательное соединение соединение
+     * @param adjMatrix - матрица
+     * @param curr - текущий индекс
+     * @return
+     */
     public static int searchForEndOfSerial(boolean[][] adjMatrix,int curr){
+        //Индекс следующей вершины, куда стремимся
         int next=curr;
+        //Счетчики входящих и выходящих в/из верш. next
         int countOfInput =0;
-
+        int countOfOutput =0;
+        //Ищем индекс последующей ячейки
         for (int i=0;i<adjMatrix[curr].length;i++){
             if (adjMatrix[curr][i]){
                 next=i;
@@ -226,36 +281,69 @@ public class GraphAlgorithms {
             }
         }
 
+        //Ищем число ребер, входящих или выходящих из
         for (int i=0;i<adjMatrix[next].length;i++){
 
             if (adjMatrix[i][next]) {
                 System.out.println("  "+i+" "+next+"  ");
                 countOfInput++;
             }
+            if (adjMatrix[next][i]) countOfOutput++;
         }
-        if (countOfInput>1){
+        //Если один из этих счетчиков больше единицы, то вершина next - это последняя вершина в последовательном соединении, возвращаем ее
+        if (countOfInput>1 || countOfOutput>1){
             return next;
-        } else if(countOfInput==1) return searchForEndOfSerial(adjMatrix,next); else return curr;
+        }
+        //Если же в вершину next можно попасть только через curr и next, в свою очередь, ведет только в одну вершину,
+        // то можем двигаться дальше и рекурсивно вызываем алгоритм для вершины next
+        else if(countOfInput==1 || countOfOutput==1) return searchForEndOfSerial(adjMatrix,next);
+        //Если же счетчик остался равен нулю, то это конец графа, и текущая вершина - конец соединения
+        else return curr;
     }
 
+
+    /**
+     * Провека на то, является ли вершина curr последней в последовательном соединении
+     * @param adjMatrix - матрица
+     * @param curr - текущая вершина
+     * @return
+     */
     public static boolean checkForEndOfSerial(boolean[][] adjMatrix,int curr){
 //        int next=0;
         int countOfInput =0;
-//
-//        for (int i=0;i<adjMatrix[curr].length;i++){
-//            if (adjMatrix[curr][i]){
-//                next=i;
-//                break;
-//            }
-//        }
-
+        int countOfOutput=0;
+        //Считаем кол-во входящих и исходящих ребер для вершины curr
         for (int i=0;i<adjMatrix[curr].length;i++){
             if (adjMatrix[i][curr]) countOfInput++;
+            if (adjMatrix[curr][i]) countOfOutput++;
         }
-        if (countOfInput>1){
+        //Если любое из них больше единицы, это значит, что данный узел - последний перед начинающимся параллельным соединением(или наоборот, кончающимся)
+        //Случай countOfOutput==0 означает окончание графа
+        if ((countOfInput>1 || countOfOutput>1)||countOfOutput==0){
             return true;
         }
         return false;
+    }
+
+    public static double itsFinalBitch(boolean[][] adjMatrix,double[][] resistors,int curr){
+
+        //Пока цепь не является простой
+        while (!checkForSimplicity(adjMatrix)){
+            //Вспомогашки для вызова searchingForTheMostNestedParallelConnection
+            int k=0;
+            boolean[] visited = new boolean[adjMatrix.length];
+            for (int i=0;i< visited.length;i++){
+                visited[i]=false;
+            }
+            System.out.println(k);
+            //Ищем индекс вершины, с которой начнется самое вложенное параллельное соединение
+            //индекс запишется в k
+            searchingForTheMostNestedParallelConnection(adjMatrix,curr,0,visited);
+            //И упрощаем это соединение
+            simplifyParallel(adjMatrix,resistors,k);
+        }
+        //В конечном счете, когда все параллельности будут устранены, упрощаем получившееся последовательное соединение
+        return simplifySerial(adjMatrix,resistors,curr,0);
     }
 
 
