@@ -485,7 +485,9 @@ public class GraphAlgorithms {
 //        };
       //          boolean[] visited ={false,false,false,false,false};
 
-  //      System.out.println(GraphAlgorithms.resistance(newGraph,resistors,0,0,visited));
+        System.out.println();
+        System.out.println(GraphAlgorithms.resistance(newGraph,resistors,0,0,visited));
+        System.out.println();
         System.out.println();
         System.out.println(itsFinalBitch(newGraph,resistors,0));
     }
